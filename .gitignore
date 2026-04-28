@@ -1,0 +1,17 @@
+build/                                                                                                                               
+  .cmake/
+  CMakeFiles/
+  CMakeCache.txt
+  *.o
+  *.a
+  *.so
+  *.exe
+  *.dll
+  moc_*
+  ui_*                                                                                                                                   qrc_*
+  .qmake.stash                                                                                                                         
+  *.user
+  *.autosave
+  .vs/
+  .vscode/
+  EOF
