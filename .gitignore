@@ -1,17 +1,31 @@
-build/                                                                                                                               
-  .cmake/
-  CMakeFiles/
-  CMakeCache.txt
-  *.o
-  *.a
-  *.so
-  *.exe
-  *.dll
-  moc_*
-  ui_*                                                                                                                                   qrc_*
-  .qmake.stash                                                                                                                         
-  *.user
-  *.autosave
-  .vs/
-  .vscode/
-  EOF
+# Build
+build/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.cmake
+
+# Compiled
+*.o
+*.a
+*.so
+*.exe
+*.dll
+
+# Qt generated
+moc_*
+ui_*
+qrc_*
+.qmake.stash
+*.user
+*.autosave
+
+# IDE
+.vscode/
+.qtcreator/
+.vs/
+
+# Project notes
+plan.md

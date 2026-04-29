@@ -4,8 +4,7 @@ A real-time, multithreaded air defense radar simulator built with **C++17** and 
 
 Simulates a PPI (Plan Position Indicator) radar display tracking aircraft, helicopters, and UAVs in real time. Features IFF (Identification Friend or Foe) classification, threat assessment, and track prediction — all powered by a multithreaded simulation engine with double-buffered snapshot synchronization.
 
-<!-- TODO: Add demo GIF here -->
-<!-- ![Demo](docs/demo.gif) -->
+![RadarSim Screenshot](first.png)
 
 ---
 
