@@ -1,6 +1,6 @@
 # RadarSim — Air Defense Radar Simulator
 
-![CI](https://github.com/zehrabetulguzel/RadarSim/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/zehragzl/RadarSim/actions/workflows/ci.yml/badge.svg)
 
 A real-time, multithreaded air defense radar simulator built with **C++17** and **Qt 6**.
 
