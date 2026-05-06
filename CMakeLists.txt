@@ -81,7 +81,18 @@ enable_testing()
 
 add_executable(RadarSim_tests
     tests/test_vector2d.cpp
+    tests/test_aircraft.cpp
+    tests/test_iff.cpp
+    tests/test_threat.cpp
+    tests/test_factory.cpp
     src/core/Vector2D.cpp
+    src/domain/FlyingObject.cpp
+    src/domain/Aircraft.cpp
+    src/domain/Helicopter.cpp
+    src/domain/UAV.cpp
+    src/radar/IFFSystem.cpp
+    src/radar/ThreatAnalyzer.cpp
+    src/core/FlyingObjectFactory.cpp
 )
 target_link_libraries(RadarSim_tests PRIVATE GTest::gtest_main)
 target_include_directories(RadarSim_tests PRIVATE ${CMAKE_SOURCE_DIR}/include)

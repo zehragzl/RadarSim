@@ -1,10 +1,12 @@
-# 🛡️ RadarSim — Air Defense Radar Simulator
+# RadarSim — Air Defense Radar Simulator
+
+![CI](https://github.com/zehrabetulguzel/RadarSim/actions/workflows/ci.yml/badge.svg)
 
 A real-time, multithreaded air defense radar simulator built with **C++17** and **Qt 6**.
 
-Simulates a PPI (Plan Position Indicator) radar display tracking aircraft, helicopters, and UAVs in real time. Features IFF (Identification Friend or Foe) classification, threat assessment, and track prediction — all powered by a multithreaded simulation engine with double-buffered snapshot synchronization.
+Simulates a PPI (Plan Position Indicator) radar display tracking 50+ aircraft, helicopters, and UAVs in real time. Features IFF (Identification Friend or Foe) classification, threat assessment, and track prediction — all powered by a multithreaded simulation engine with thread-safe snapshot synchronization.
 
-![RadarSim Screenshot](first.png)
+![RadarSim Screenshot](image.png)
 
 ---
 
@@ -23,35 +25,42 @@ Simulates a PPI (Plan Position Indicator) radar display tracking aircraft, helic
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-+----------------------------------------------------+
-|                    UI Thread (Qt)                   |
-|   RadarWidget  <-- ThreatDisplay  <-- ControlPanel |
-+-------------------------^--------------------------+
-                          | (signal/slot, queued)
-+-------------------------+--------------------------+
-|              Simulation Engine (Worker)             |
-|   - SimulationClock (tick generator)                |
-|   - ObjectManager   (thread-safe container)         |
-|   - ThreatAnalyzer  (analysis pipeline)             |
-+-------------------------^--------------------------+
-                          |
-+-------------------------+--------------------------+
-|                  Domain Model                      |
-|   FlyingObject (abstract)                          |
-|     ├── Aircraft                                   |
-|     ├── Helicopter                                 |
-|     └── UAV                                        |
-|   Radar, IFFSystem, TrackPredictor                 |
-+----------------------------------------------------+
+┌──────────────────────────────────────────┐
+│              UI Thread (Qt)              │
+│  RadarWidget                             │
+│   sweep · IFF icons · threat rings       │
+│   FOE trajectory predictions             │
+└──────────────────┬───────────────────────┘
+                   │ QMetaObject::invokeMethod
+                   │ (Qt::QueuedConnection)
+┌──────────────────┴───────────────────────┐
+│         Simulation Thread (Worker)        │
+│  SimulationEngine (std::thread)           │
+│    ObjectManager  (std::shared_mutex)     │
+│    Radar::scan → ThreatAnalyzer           │
+│    TrackPredictor                         │
+└──────────────────────────────────────────┘
+              │
+┌─────────────┴──────────────────────────────┐
+│              Domain Model                   │
+│  FlyingObject (abstract)                    │
+│    ├── Aircraft   — RCS 1.0, fast           │
+│    ├── Helicopter — RCS 0.5, waypoints      │
+│    └── UAV        — RCS 0.01, small         │
+│  IFFSystem · Radar · ThreatAnalyzer         │
+│  TrackPredictor · FlyingObjectFactory       │
+└─────────────────────────────────────────────┘
 ```
 
 **Key design decisions:**
-- **Double-buffering** for thread-safe UI updates without mutex contention
-- **Strategy pattern** for interchangeable threat analysis algorithms
-- **Factory pattern** for JSON-to-object instantiation
+
+- **Snapshot copy pattern** — simulation thread copies track data into a local vector, releases the mutex, then dispatches to the UI thread via `Qt::QueuedConnection`. The UI never holds a lock during painting.
+- **`std::shared_mutex`** — multiple UI reads can proceed concurrently; simulation write blocks readers only during `update()`, not during rendering.
+- **Factory + JSON** — `FlyingObjectFactory::create(type, ...)` decouples object construction from scenario loading. Adding a new type requires one new class and one `if` branch.
+- **Strategy-ready ThreatAnalyzer** — scoring is isolated in `calcScore()`. Swapping the algorithm requires no changes to callers.
 
 ---
 
@@ -86,9 +95,16 @@ ctest --output-on-failure
 
 ---
 
-## 📚 Lessons Learned
+## Lessons Learned
 
-<!-- TODO: Fill in after development -->
+**Hardest problem: thread-safe UI updates without stutter.**
+My first approach used a plain `std::mutex` around the entire object list — the UI thread would block during each simulation tick, causing visible frame drops at 50+ targets. The fix was a two-part approach: `std::shared_mutex` allows concurrent reads, and the snapshot-copy pattern ensures the UI thread never holds a lock during painting. The mutex is held only for the duration of copying position data, not for the entire paint cycle.
+
+**Choosing cross-thread notification.**
+I evaluated `std::condition_variable` vs Qt's signal-slot for notifying the UI of new data. I went with `QMetaObject::invokeMethod(..., Qt::QueuedConnection)` because it integrates cleanly with Qt's event loop and avoids a separate notification mutex — the queued connection is thread-safe message passing built into Qt.
+
+**Boundary reflection.**
+The initial velocity values caused aircraft to exit the 250 km radar range within seconds, making the display nearly empty. The fix — `reflectAtBoundary()` using the outward normal vector `n = pos.normalize()` and the reflection formula `v' = v - 2(v·n)n` — keeps all targets permanently visible while preserving physically plausible motion.
 
 ---
 
