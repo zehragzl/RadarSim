@@ -1,0 +1,70 @@
+HAFTA 3 — Multithreading ve Thread-Safe Veri Paylaşımı
+========================================================
+
+HEDEF: Simülasyon mantığını UI thread'inden ayır.
+       50+ hedef akıcı şekilde hareket etsin, UI hiç takılmasın.
+
+--------------------------------------------------------
+YAPILACAKLAR
+--------------------------------------------------------
+
+[ ] 1. SimulationEngine sınıfı
+        - include/core/SimulationEngine.h
+        - src/core/SimulationEngine.cpp
+        - İçinde std::thread çalıştırır
+        - ObjectManager'ı bu thread'de günceller
+        - start() / stop() arayüzü
+        - std::atomic<bool> running_ ile durdurma bayrağı
+
+[ ] 2. ObjectManager'ı thread-safe yap
+        - std::shared_mutex ekle (reader-writer kilidi)
+        - SimulationEngine yazar  → std::unique_lock (exclusive)
+        - UI thread okur          → std::shared_lock (shared)
+        - getObjects() mutex ile korunacak
+
+[ ] 3. Double-buffering (opsiyonel ama değerli)
+        - Engine "back buffer"a yazar
+        - UI "front buffer"dan okur
+        - Her tick sonunda swap
+        - Mutex contention minimuma iner
+
+[ ] 4. std::condition_variable ile snapshot sinyali
+        - Engine yeni snapshot hazırladığında UI'ya sinyal ver
+        - std::condition_variable + std::mutex kombinasyonu
+        - UI thread sadece yeni veri gelince çizer
+
+[ ] 5. RadarWidget timer bağlantısını güncelle
+        - RadarWidget'ın kendi iç QTimer'ını kaldır (sweep hariç)
+        - SimulationClock::tick sinyali → RadarWidget::setObjects
+        - Sweep açısı kendi timer'ında kalmaya devam edebilir
+
+[ ] 6. 50+ hedef ekle, performans test et
+        - ObjectManager'a hardcoded 50+ nesne ekle (karışık tip)
+        - UI'nın takılmadığını gözlemle
+        - FPS düşüşü varsa double-buffering'e geç
+
+[ ] 7. main.cpp güncelle
+        - SimulationEngine oluştur ve start() çağır
+        - Uygulama kapanırken stop() çağır (QApplication::aboutToQuit sinyali)
+
+--------------------------------------------------------
+BU HAFTA ÖĞRENİLECEK KAVRAMLAR
+--------------------------------------------------------
+
+  std::thread             — worker thread oluşturma
+  std::mutex              — temel kilit
+  std::shared_mutex       — reader-writer kilidi
+  std::lock_guard         — RAII mutex yönetimi
+  std::unique_lock        — esnek kilit (condition_variable ile)
+  std::shared_lock        — eş zamanlı okuma
+  std::atomic<bool>       — lock-free bayrak
+  std::condition_variable — thread'ler arası bildirim
+  double-buffering        — UI/sim veri ayrımı
+
+--------------------------------------------------------
+ÇIKTI
+--------------------------------------------------------
+
+  50+ hedef ekranda akıcı hareket ediyor
+  UI thread hiç bloke olmuyor
+  README'ye mimari diyagram eklenebilir

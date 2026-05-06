@@ -17,6 +17,7 @@ set(CORE_SOURCES
     src/core/Vector2D.cpp
     src/core/SimulationClock.cpp
     src/core/ObjectManager.cpp
+    src/core/SimulationEngine.cpp
 )
 
 set(UI_SOURCES
