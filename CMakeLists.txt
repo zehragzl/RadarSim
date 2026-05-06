@@ -18,6 +18,8 @@ set(CORE_SOURCES
     src/core/SimulationClock.cpp
     src/core/ObjectManager.cpp
     src/core/SimulationEngine.cpp
+    src/core/FlyingObjectFactory.cpp
+    src/core/ScenarioLoader.cpp
 )
 
 set(UI_SOURCES
@@ -40,6 +42,7 @@ set(RADAR_SOURCES
     src/radar/IFFSystem.cpp
     src/radar/Radar.cpp
     src/radar/ThreatAnalyzer.cpp
+    src/radar/TrackPredictor.cpp
 )
 
 add_executable(${PROJECT_NAME}
@@ -52,9 +55,21 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    SCENARIOS_DIR="${CMAKE_SOURCE_DIR}/scenarios"
+)
+
+# nlohmann/json
+include(FetchContent)
+FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+)
+FetchContent_MakeAvailable(nlohmann_json)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
 
 # Google Test
-include(FetchContent)
+
 FetchContent_Declare(
     googletest
     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip

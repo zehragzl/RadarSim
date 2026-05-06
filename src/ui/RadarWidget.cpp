@@ -18,10 +18,12 @@ RadarWidget::RadarWidget(QWidget* parent)
 }
 
 void RadarWidget::setTracks(const std::vector<Track>& tracks,
-                             const std::vector<ThreatReport>& reports)
+                             const std::vector<ThreatReport>& reports,
+                             const std::unordered_map<int, std::vector<Vector2D>>& predictions)
 {
-    tracks_  = tracks;
-    reports_ = reports;
+    tracks_      = tracks;
+    reports_     = reports;
+    predictions_ = predictions;
     update();
 }
 
@@ -32,6 +34,7 @@ void RadarWidget::paintEvent(QPaintEvent* event) {
     painter.fillRect(0, 0, width(), height(), Qt::black);
     drawGrid(painter);
     drawSweep(painter);
+    drawPredictions(painter);
     drawTargets(painter);
 }
 
@@ -130,6 +133,35 @@ void RadarWidget::drawTargets(QPainter& painter) {
     }
 
     Q_UNUSED(scale);
+}
+
+void RadarWidget::drawPredictions(QPainter& painter) {
+    for (const auto& track : tracks_) {
+        if (track.iff != IFFStatus::FOE)
+            continue;
+
+        auto it = predictions_.find(track.id);
+        if (it == predictions_.end() || it->second.empty())
+            continue;
+
+        const auto& pts = it->second;
+        QPointF prev = worldToScreen(track.lastKnownPosition);
+
+        for (int i = 0; i < static_cast<int>(pts.size()); ++i) {
+            int alpha = 255 - static_cast<int>(180.0 * i / static_cast<int>(pts.size()));
+            QColor c(255, 60, 60, alpha);
+            QPointF cur = worldToScreen(pts[i]);
+
+            painter.setPen(QPen(c, 2, Qt::DashLine));
+            painter.drawLine(prev, cur);
+
+            painter.setPen(QPen(c, 1));
+            painter.setBrush(QBrush(c));
+            painter.drawEllipse(cur, 4.0, 4.0);
+
+            prev = cur;
+        }
+    }
 }
 
 QColor RadarWidget::iffColor(IFFStatus iff) const {

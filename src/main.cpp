@@ -1,39 +1,29 @@
 #include <QApplication>
 #include <QMetaObject>
+#include <unordered_map>
 #include "ui/RadarWidget.h"
 #include "core/ObjectManager.h"
 #include "core/SimulationEngine.h"
+#include "core/ScenarioLoader.h"
 #include "radar/IFFSystem.h"
 #include "radar/Radar.h"
 #include "radar/ThreatAnalyzer.h"
+#include "radar/TrackPredictor.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
     ObjectManager manager;
+    IFFSystem iff;
+
+    ScenarioLoader::load(SCENARIOS_DIR "/default.json", manager, iff);
+
     SimulationEngine engine(manager);
     RadarWidget radar;
 
-    // IFF atamaları
-    IFFSystem iff;
-    iff.setStatus(1,  IFFStatus::FOE);
-    iff.setStatus(2,  IFFStatus::FRIEND);
-    iff.setStatus(3,  IFFStatus::FOE);
-    iff.setStatus(4,  IFFStatus::FRIEND);
-    iff.setStatus(5,  IFFStatus::FOE);
-    iff.setStatus(6,  IFFStatus::FRIEND);
-    iff.setStatus(7,  IFFStatus::FOE);
-    iff.setStatus(8,  IFFStatus::FRIEND);
-    iff.setStatus(9,  IFFStatus::FOE);
-    iff.setStatus(10, IFFStatus::FRIEND);
-    iff.setStatus(11, IFFStatus::FOE);
-    iff.setStatus(12, IFFStatus::FRIEND);
-    iff.setStatus(13, IFFStatus::FRIEND);
-    iff.setStatus(14, IFFStatus::FRIEND);
-    // 15-50 arası UNKNOWN (kayıtlı değil → varsayılan)
-
     Radar radarSensor(250.0, 0.005);
     ThreatAnalyzer analyzer(250.0);
+    TrackPredictor predictor;
 
     radar.setFixedSize(800, 800);
     radar.setWindowTitle("RadarSim");
@@ -44,8 +34,13 @@ int main(int argc, char* argv[]) {
         auto tracks  = radarSensor.getTracks();
         auto reports = analyzer.analyzeAll(tracks);
 
-        QMetaObject::invokeMethod(&radar, [&radar, tracks, reports]() {
-            radar.setTracks(tracks, reports);
+        predictor.update(tracks);
+        std::unordered_map<int, std::vector<Vector2D>> predictions;
+        for (const auto& t : tracks)
+            predictions[t.id] = predictor.predict(t.id);
+
+        QMetaObject::invokeMethod(&radar, [&radar, tracks, reports, predictions]() {
+            radar.setTracks(tracks, reports, predictions);
         }, Qt::QueuedConnection);
     });
 
