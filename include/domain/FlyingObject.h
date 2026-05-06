@@ -18,7 +18,8 @@ class FlyingObject {
         
     protected:
         FlyingObject(int id, const Vector2D& pos, const Vector2D& vel, double alt)
-            : id_(id), pos_(pos), vel_(vel), altitude_(alt) {}   
+            : id_(id), pos_(pos), vel_(vel), altitude_(alt) {}
+        void reflectAtBoundary(double boundaryKm);
         Vector2D pos_;
         Vector2D vel_;
         double altitude_;

@@ -36,10 +36,17 @@ set(DOMAIN_SOURCES
     src/domain/UAV.cpp
 )
 
+set(RADAR_SOURCES
+    src/radar/IFFSystem.cpp
+    src/radar/Radar.cpp
+    src/radar/ThreatAnalyzer.cpp
+)
+
 add_executable(${PROJECT_NAME}
     src/main.cpp
     ${CORE_SOURCES}
     ${DOMAIN_SOURCES}
+    ${RADAR_SOURCES}
     ${UI_SOURCES}
     ${MOC_HEADERS}
 )

@@ -6,6 +6,7 @@ Helicopter::Helicopter(int id, const Vector2D& position, const Vector2D& velocit
 void Helicopter::update(double deltaSeconds) {
     if (waypoints_.empty()) {
         pos_ = pos_ + vel_ * deltaSeconds;
+        reflectAtBoundary(250.0);
         return;
     }
 

@@ -6,34 +6,38 @@
 #include <QTimer>
 #include <vector>
 
-#include "../domain/FlyingObject.h"
+#include "../radar/Track.h"
+#include "../radar/ThreatAnalyzer.h"
 
 class RadarWidget : public QWidget {
     Q_OBJECT
 
-    public:
-        explicit RadarWidget(QWidget* parent = nullptr);
-        void setObjects(const std::vector<FlyingObject*>& objects);
-        void setSweepAngle(double angle);
-    
-    protected:
-        void paintEvent(QPaintEvent* event) override;
-        void resizeEvent(QResizeEvent* event) override;
+public:
+    explicit RadarWidget(QWidget* parent = nullptr);
 
-    private:
-        std::vector<FlyingObject*> objects_;
-        double sweepAngle_;
-        double rangeKm_;
-        QTimer* timer_;
+    void setTracks(const std::vector<Track>& tracks,
+                   const std::vector<ThreatReport>& reports);
 
-        QPointF worldToScreen(const Vector2D& pos) const;
-        void drawGrid(QPainter& painter);
-        void drawSweep(QPainter& painter);
-        void drawTargets(QPainter& painter);
-    
-    private slots:
-        void onTick();
+protected:
+    void paintEvent(QPaintEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
+private:
+    std::vector<Track> tracks_;
+    std::vector<ThreatReport> reports_;
+    double sweepAngle_;
+    double rangeKm_;
+    bool blinkOn_;
+    QTimer* timer_;
 
+    QPointF worldToScreen(const Vector2D& pos) const;
+    void drawGrid(QPainter& painter);
+    void drawSweep(QPainter& painter);
+    void drawTargets(QPainter& painter);
+    QColor iffColor(IFFStatus iff) const;
+
+private slots:
+    void onTick();
 };
+
 #endif

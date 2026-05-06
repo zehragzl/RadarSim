@@ -5,6 +5,7 @@ Aircraft::Aircraft(int id, const Vector2D& position, const Vector2D& velocity, d
 
 void Aircraft::update(double deltaSeconds) {
     pos_ = pos_ + vel_ * deltaSeconds;
+    reflectAtBoundary(250.0);
 }
 
 double Aircraft::radarCrossSection() const {
